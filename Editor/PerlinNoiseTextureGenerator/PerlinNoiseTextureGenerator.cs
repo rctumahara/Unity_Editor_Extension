@@ -70,6 +70,16 @@ public class PerlinNoiseTextureGenerator : EditorWindow
         }
 
         generatedTexture.Apply();
+
+        // テクスチャを保存
+        string path = EditorUtility.SaveFilePanel("Save Perlin Noise Texture", "", textureName, "png");
+        if (!string.IsNullOrEmpty(path)) // 保存パスが空ではないことを確認
+        {
+            byte[] bytes = generatedTexture.EncodeToPNG();
+            System.IO.File.WriteAllBytes(path, bytes);
+            AssetDatabase.Refresh();
+            Debug.Log("Perlin Noise texture saved as: " + path);
+        }
     }
 }
 
