@@ -9,6 +9,7 @@ public class PerlinNoiseTextureGenerator : EditorWindow
     float scale = 20f; // ノイズのスケール
     string textureName = "PerlinNoiseTexture"; // 保存するテクスチャの名前
     int seed = 0; // seed値
+    bool includeAlphaChannel = false; // アルファチャンネルの有効/無効フラグ
 
     [MenuItem("Window/Perlin Noise Texture Generator")]
     public static void ShowWindow()
@@ -25,6 +26,7 @@ public class PerlinNoiseTextureGenerator : EditorWindow
 
         float newScale = EditorGUILayout.Slider("Scale", scale, 1f, 100f); // スライダーを使用する
         int newSeed = EditorGUILayout.IntField("Seed", seed); // seed値の入力フィールド
+        includeAlphaChannel = EditorGUILayout.Toggle("Include Alpha Channel", includeAlphaChannel); // アルファチャンネルの有効/無効のトグル
 
         // スケールやシードの値が変更されたらテクスチャを再生成してプレビューを更新
         if (newScale != scale || newSeed != seed)
@@ -38,6 +40,7 @@ public class PerlinNoiseTextureGenerator : EditorWindow
         if (GUILayout.Button("Generate Texture"))
         {
             GeneratePerlinNoiseTexture();
+            SaveTexture(); // テクスチャ保存
         }
 
         textureName = EditorGUILayout.TextField("Texture Name", textureName);
@@ -64,12 +67,33 @@ public class PerlinNoiseTextureGenerator : EditorWindow
 
                 // seed値を指定してPerlinノイズを生成
                 float noiseValue = PerlinNoiseGenerator.GetPerlinNoise(xCoord, yCoord, scale / 10f, 3, 0.5f, seed);
-                Color color = new Color(noiseValue, noiseValue, noiseValue);
+
+                Color color;
+                if (includeAlphaChannel)
+                {
+                    // アルファチャンネルが有効な場合、アルファ値を設定する
+                    color = new Color(noiseValue, noiseValue, noiseValue, noiseValue);
+                }
+                else
+                {
+                    // アルファチャンネルが無効な場合、アルファ値を無視する
+                    color = new Color(noiseValue, noiseValue, noiseValue);
+                }
+
                 generatedTexture.SetPixel(x, y, color);
             }
         }
 
         generatedTexture.Apply();
+    }
+
+    void SaveTexture()
+    {
+        if (generatedTexture == null)
+        {
+            Debug.LogError("Generated texture is null.");
+            return;
+        }
 
         // テクスチャを保存
         string path = EditorUtility.SaveFilePanel("Save Perlin Noise Texture", "", textureName, "png");
@@ -79,6 +103,10 @@ public class PerlinNoiseTextureGenerator : EditorWindow
             System.IO.File.WriteAllBytes(path, bytes);
             AssetDatabase.Refresh();
             Debug.Log("Perlin Noise texture saved as: " + path);
+        }
+        else
+        {
+            Debug.Log("Save operation cancelled.");
         }
     }
 }
