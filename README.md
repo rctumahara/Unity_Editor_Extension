@@ -10,8 +10,8 @@ Unity EditorのWindow のメニューに追加されます。
 ご自由にお使いください。
 
 
-Unity 検証バージョン
-2022.3.23f1
+Unity 作成検証バージョン
+2022.3.23f1 / 6000.3.0b10 
 
 -------------------------------------------------------
 Create a Unity Editor file. Put this script in it.
@@ -23,4 +23,4 @@ Feel free to use it as you like.
 
 
 Unity Verification Version
-2022.3.23f1
+2022.3.23f1 / 6000.3.0b10 
