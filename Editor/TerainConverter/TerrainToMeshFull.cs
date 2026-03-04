@@ -66,6 +66,25 @@ public class TerrainToMeshFull : EditorWindow
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space(5);
+
+        // --- 追加：頂点数・ポリゴン数の表示 (計算用変数は表示のためだけに使い、Mesh作成には影響させない) ---
+        if (targetTerrain != null)
+        {
+            int hmRes = targetTerrain.terrainData.heightmapResolution;
+            int wCount = (hmRes - 1) / resolutionReduction + 1;
+            int hCount = (hmRes - 1) / resolutionReduction + 1;
+            int vCount = wCount * hCount;
+            int tCount = (wCount - 1) * (hCount - 1) * 2;
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.Label("【変換後の予測ステータス】", EditorStyles.miniBoldLabel);
+            GUIStyle statsStyle = new GUIStyle(EditorStyles.label);
+            if (vCount > 64000) statsStyle.normal.textColor = Color.red;
+            GUILayout.Label($"頂点数: {vCount:N0}", statsStyle);
+            GUILayout.Label($"ポリゴン数: {tCount:N0}");
+            EditorGUILayout.EndVertical();
+        }
+
         resolutionReduction = EditorGUILayout.IntSlider("リダクション", resolutionReduction, 1, 8);
         string[] sizeOptions = { "64", "128", "256", "512", "1024", "2048" };
         selectedSizeIndex = EditorGUILayout.Popup("テクスチャ解像度 (px)", selectedSizeIndex, sizeOptions);
@@ -89,7 +108,6 @@ public class TerrainToMeshFull : EditorWindow
         if (targetTerrain == null) return;
         RemoveExistingLinkedMesh(targetTerrain);
 
-        // ディレクトリがなければ作成
         if (!Directory.Exists(exportDirectory)) Directory.CreateDirectory(exportDirectory);
 
         string pngPath = Path.Combine(exportDirectory, targetTerrain.name + "_Baked.png").Replace("\\", "/");
@@ -134,13 +152,11 @@ public class TerrainToMeshFull : EditorWindow
     {
         if (targetTerrain == null) return;
 
-        // シーン内のすべてのメッシュリンクをチェック
         TerrainMeshLink[] links = FindObjectsOfType<TerrainMeshLink>(true);
         foreach (var link in links)
         {
             if (link.sourceTerrain == targetTerrain)
             {
-                // ここが重要：オブジェクトが持っているパスを直接消しにいく
                 if (!string.IsNullOrEmpty(link.bakedTexturePath)) DeleteFile(link.bakedTexturePath);
                 if (!string.IsNullOrEmpty(link.bakedMeshPath)) DeleteFile(link.bakedMeshPath);
 
@@ -149,7 +165,6 @@ public class TerrainToMeshFull : EditorWindow
             }
         }
 
-        // 保険：現在の設定フォルダにあるファイルも消しにいく
         DeleteFile(Path.Combine(exportDirectory, targetTerrain.name + "_Baked.png"));
         DeleteFile(Path.Combine(exportDirectory, targetTerrain.name + "_Mesh.asset"));
 
@@ -181,7 +196,6 @@ public class TerrainToMeshFull : EditorWindow
         }
     }
 
-    // --- BakeTexture と CreateMesh は前回と同じですが、一応含めます ---
     void BakeTexture(Terrain terrain, int res, string savePath)
     {
         TerrainData data = terrain.terrainData;
@@ -217,6 +231,7 @@ public class TerrainToMeshFull : EditorWindow
         AssetDatabase.Refresh();
     }
 
+    // --- ここは元のコードから一切変更していません ---
     Mesh CreateMesh(TerrainData data, int res)
     {
         int w = data.heightmapResolution; int h = data.heightmapResolution;
